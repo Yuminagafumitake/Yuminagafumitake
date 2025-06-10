@@ -1,0 +1,60 @@
+import tkinter as tk
+from tkinter import messagebox
+
+def calculate_japan_income_tax(gross_income: float) -> int:
+    """
+    根据日本速算表计算所得税（含复兴特别所得税2.1%）。
+    参数：
+    - gross_income: 课税总所得金额（单位：日元）
+    返回：
+    - 所得税金额（单位：日元，100円未満切り捨て）
+    """
+    # 所得税速算表（下限, 上限, 税率, 控除额）
+    tax_table = [
+        (0, 1_950_000, 0.05, 0),
+        (1_950_001, 3_300_000, 0.10, 97_500),
+        (3_300_001, 6_950_000, 0.20, 427_500),
+        (6_950_001, 9_000_000, 0.23, 636_000),
+        (9_000_001, 18_000_000, 0.33, 1_536_000),
+        (18_000_001, 40_000_000, 0.40, 2_796_000),
+        (40_000_001, float('inf'), 0.45, 4_796_000),
+    ]
+
+    for lower, upper, rate, deduction_amt in tax_table:
+        if lower <= gross_income <= upper:
+            base_tax = gross_income * rate - deduction_amt
+            break
+    else:
+        base_tax = 0
+
+    special_tax = base_tax * 0.021
+    total_tax = base_tax + special_tax
+    return int(total_tax // 100 * 100)
+
+def on_calculate():
+    try:
+        income = float(entry_income.get())
+        tax = calculate_japan_income_tax(income)
+        result_label.config(text=f"应缴税额：{tax:,} 円（含复兴特别所得税）")
+    except ValueError:
+        messagebox.showerror("错误", "请输入有效的数字格式（日元）")
+
+# 创建主窗口
+root = tk.Tk()
+root.title("日本所得税计算器")
+
+# 输入框
+tk.Label(root, text="课税所得金额（日元）:").grid(row=0, column=0, padx=10, pady=10)
+entry_income = tk.Entry(root, width=20)
+entry_income.grid(row=0, column=1)
+
+# 计算按钮
+calc_button = tk.Button(root, text="计算税额", command=on_calculate)
+calc_button.grid(row=1, column=0, columnspan=2, pady=10)
+
+# 输出结果
+result_label = tk.Label(root, text="", font=("Arial", 12), fg="blue")
+result_label.grid(row=2, column=0, columnspan=2, pady=10)
+
+# 启动窗口循环
+root.mainloop()
